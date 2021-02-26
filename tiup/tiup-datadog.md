@@ -18,7 +18,7 @@ Datadog 是一个针对云原生应用的监控服务。它通过 SaaS 数据分
 
 > **注意：**
 > 
-> 本文只针对 TiUP 部署的 TiDB 集群。使用 TiDB Operator 部署在 k8s 的 TiDB 集群也能 集成到 Datadog，详见[另一篇文档](nothing-here!)。
+> 本文只针对 TiUP 部署的 TiDB 集群。使用 TiDB Operator 部署在 k8s 的 TiDB 集群也能 集成到 Datadog，详见后续文档。
 
 > **事先准备：**
 >
@@ -323,8 +323,62 @@ sudo datadog-agent status
 
 ## 第六步：通过 Datadog Web App 配置日志解析
 
-## 第六步：通过 Datadog Web App 配置 Histogram 计算
+上面五个步骤，已经将数据上报到了 Datadog 中央服务。这时候已经能在 Datadog app 网页上查到数据。为了获得更好的体验，还要做两个修改。
+
+为了让 Datadog 识别日志中的时间和 level ，需要使用 Datadog 的日志 [processing pipeline](https://docs.datadoghq.com/logs/processing/processors/?tab=ui) 功能，配置 [grok parser](https://docs.datadoghq.com/logs/processing/parsing/?tab=matcher) 和 [remapper](https://docs.datadoghq.com/logs/processing/processors/?tab=ui#remapper) 。
+
+进入 Datadog app 首页，左边选择 Logs > Configuration，创建以下 pipeline：
+
+![datadog-log-pipeline](/media/tiup/tiup-datadog-pipeline.png)
+
+Pipeline 中的 grok parser需要解析三种不同格式的log：
+
+![datadog-log-grok](/media/tiup/tiup-datadog-grok.png)
+
+Parsing rules 详细配置如下：
+
+{{< copyable "" >}}
+
+```
+extractDateLevel1 \[%{date("yyyy/MM/dd HH:mm:ss.SSS ZZ"):date}]\s+\[%{word:level}\]\s+%{data}
+extractDateLevel2 %{date("yyyy-MM-dd HH:mm:ss,SSS"):date}\s+<%{word:level}>\s+%{data}
+extractDate \#\sTime:\s%{date("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSZZ"):date}\s+%{data}
+```
+
+创建一个 date remapper：
+
+![datedog-log-remapper-date](/media/tiup/tiup-datadog-remapper-date.png)
+
+创建一个 level remapper：
+
+![datedog-log-remapper-date](/media/tiup/tiup-datadog-remapper-level.png)
+
+## 第七步：通过 Datadog Web App 配置 Histogram 计算
+
+对于 histogram 类型的 metric，Datadog 需要显式开启 percentile 的计算。
+
+进入 Datadog app 首页，左边选择 Metrics > Summary，点击页面上方的 Calculate Percentiles 按钮，对所有 histogram 类型的指标都开启 percentile 计算：
+
+![datedog-histogram](/media/tiup/tiup-datadog-histogram.png)
 
 ## Datadog App 简单使用
 
+完成上面七个步骤后，已经能在 Datadog app 中使用 TiDB 监控数据了。下面展示部分使用截图。
+
+日志查询：
+
+![datedog-app-logs](/media/tiup/tiup-datadog-app-logs.png)
+
+单个日志详情：
+
+![datedog-app-logs-single](/media/tiup/tiup-datadog-app-logs-single.png)
+
+指标（ETCD写磁盘耗时P95）查询：
+
+![datedog-app-metrics](/media/tiup/tiup-datadog-app-metrics.png)
+
+用户还可以根据 Datadog 文档做更定制化的配置，例如配置报警 (Monitors)，看板 (Dashboards) 等等。
+
 ## 未来计划
+
+上面的集成过程，有大量人工配置，在集群节点较多情况下容易出错。未来可能会为 Datadog 开发集成功能，让用户做到一键接入。
