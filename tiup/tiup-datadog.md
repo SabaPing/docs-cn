@@ -38,7 +38,7 @@ Datadog 是一个针对云原生应用的监控服务。它通过 SaaS 数据分
 tiup cluster display tidb-test
 ```
 
-会显示一下信息：
+会显示以下信息：
 
 ```shell
 Starting component `cluster`: /root/.tiup/components/cluster/v1.3.2/tiup-cluster display tidb-test
@@ -65,7 +65,7 @@ ID                  Role          Host          Ports                           
 Total nodes: 13
 ```
 
-这里需要重点关注 `Host` 一列和 `Data Dir` 一列。`Host` 一列显示了集群中有哪些节点，在后续步骤中每个节点都要做 Datadog 相关的配置；`Data Dir` 一列显示了日志路径，使用 TiUP 部署的 TiDB 集群的各个组件都会把日志保存在 `Data Dir` 路径下，后续步骤中需要配置 Datadog agent 采集这些日志。
+这里需要重点关注 `Host`、`Ports` 和 `Data Dir` 三列。`Host` 一列显示了集群中有哪些节点，在后续步骤中每个节点都要做 Datadog 相关的配置；`Ports` 一列显示了 TiDB 关键组件的 web 服务的端口，后续步骤中的指标抓取需要端口信息；`Data Dir` 一列显示了日志路径，使用 TiUP 部署的 TiDB 集群的各个组件都会把日志保存在 `Data Dir` 路径下，后续步骤中需要配置 Datadog agent 采集这些日志。
 
 > **注意：**
 >
@@ -248,7 +248,7 @@ sudo datadog-agent status
 
 如果要把指标数据集成到 Datadog，Datadog agent 扮演了类似 Prometheus 的角色。它也会周期性的抓取 TiDB 的指标接口，并把数据发往 Datadog 中央服务。
 
-使用 Datadog agent 的 OpenMetrics 模块，配置指标采集。
+使用 Datadog agent 的 [OpenMetrics](https://docs.datadoghq.com/integrations/openmetrics/) 模块，配置指标采集。
 
 - 进入 OpenMetrics 配置目录，创建并编辑 yaml 配置文件：
 
@@ -262,7 +262,7 @@ sudo datadog-agent status
 
   > **注意：**
   >
-  > 根据第一步获得的 `Host` ，修改配置中的端口。
+  > 根据第一步获得的 `Ports` ，修改配置中的端口。
 
   {{< copyable "" >}}
 
